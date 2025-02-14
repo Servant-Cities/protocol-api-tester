@@ -1,5 +1,5 @@
 <script>
-  import { accept } from "$lib/previewSDK";
+  import { accept } from "$lib/plagroundPreviewSDK";
   import { onMount } from "svelte";
 
   let scenarios = $state([]);
@@ -25,7 +25,7 @@
   };
 
   onMount(async () => {
-    accept("http://localhost:5173", loadData);
+    accept("https://demo-rest-playground.servantcities.eu", loadData);
   });
 </script>
 

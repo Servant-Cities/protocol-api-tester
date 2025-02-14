@@ -7,7 +7,6 @@ export const getRerouteURL = (
 ): string => {
   let rerouteURL = url;
   let urlPath: string;
-  console.log(JSON.stringify({ url, origin, pathsMap }));
 
   try {
     urlPath = new URL(url).pathname;
