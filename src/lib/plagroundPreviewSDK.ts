@@ -80,11 +80,11 @@ export const createFetchOverride: FetchOverrideCreator =
   };
 
 export const createMessageHandler = (
-  origin: string,
+  origins: Array<string>,
   refresh: () => Promise<void>
 ) => {
   messageHandler = async (event: MessageEvent) => {
-    if (origin !== event.origin) return;
+    if (!origins.includes(event.origin)) return;
     if (event.data.type === "REQUEST_PREVIEW_SDK") {
       const { preview, secret } = event.data;
       const { pathsMap } = JSON.parse(preview);
@@ -100,8 +100,8 @@ export const createMessageHandler = (
   };
 };
 
-export const accept = (origin: string, refresh: () => void) => {
-  createMessageHandler(origin, refresh);
+export const accept = (origins: Array<string>, refresh: () => void) => {
+  createMessageHandler(origins, refresh);
   window.addEventListener("message", messageHandler);
   console.log("accepted : ", origin);
 };

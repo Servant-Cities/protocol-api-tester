@@ -25,7 +25,7 @@
   };
 
   onMount(async () => {
-    accept("https://demo-rest-playground.servantcities.eu", loadData);
+    accept(["https://demo-rest-playground.servantcities.eu", "https://docs.getgrist.com"], loadData);
   });
 </script>
 
