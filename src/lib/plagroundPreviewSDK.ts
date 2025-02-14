@@ -84,6 +84,7 @@ export const createMessageHandler = (
   refresh: () => Promise<void>
 ) => {
   messageHandler = async (event: MessageEvent) => {
+    if (origin !== event.origin) return;
     if (event.data.type === "REQUEST_PREVIEW_SDK") {
       const { preview, secret } = event.data;
       const { pathsMap } = JSON.parse(preview);
