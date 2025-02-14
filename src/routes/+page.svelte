@@ -1,37 +1,33 @@
 <script>
-	import { onMount } from 'svelte';
+  import { accept } from "$lib/previewSDK";
+  import { onMount } from "svelte";
 
-	let scenarios = $state([]);
-	let activities = $state([]);
-	let triggers = $state([]);
-	let connections = $state([]);
+  let scenarios = $state([]);
+  let activities = $state([]);
+  let triggers = $state([]);
+  let connections = $state([]);
 
-	async function fetchResource(resourceName, state) {
-		try {
-			const res = await fetch(`http://localhost:5173/${resourceName}`);
-			if (!res.ok) throw new Error(`Failed to load ${resourceName}`);
-			state.set(await res.json()); // Update the state
-		} catch (error) {
-			console.error(error);
-		}
-	}
+  async function fetchResource(resourceName) {
+    try {
+      const res = await fetch(`http://localhost:5173/api/${resourceName}`);
+      if (!res.ok) throw new Error(`Failed to load ${resourceName}`);
+      return res.json();
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
-	onMount(() => {
-		fetchResource('scenarios', scenarios);
-		fetchResource('activities', activities);
-		fetchResource('triggers', triggers);
-		fetchResource('connections', connections);
-	});
+  const loadData = async () => {
+    scenarios = await fetchResource("scenarios");
+    activities = await fetchResource("activities");
+    triggers = await fetchResource("triggers");
+    connections = await fetchResource("connections");
+  };
+
+  onMount(async () => {
+    accept("http://localhost:5173", loadData);
+  });
 </script>
-
-<style>
-	pre {
-		background: #f4f4f4;
-		padding: 10px;
-		border-radius: 5px;
-		overflow-x: auto;
-	}
-</style>
 
 <h1>Fetched Resources</h1>
 
@@ -46,3 +42,17 @@
 
 <h2>Connections</h2>
 <pre>{JSON.stringify(connections, null, 2)}</pre>
+
+<style>
+  * {
+    color: white;
+  }
+  pre {
+    background: black;
+    border: white solid 2px;
+    border-radius: 8px;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+  }
+</style>
