@@ -84,6 +84,7 @@ export const createMessageHandler = (
   refresh: () => Promise<void>
 ) => {
   messageHandler = async (event: MessageEvent) => {
+    console.log("Received message from ", event.origin);
     if (!origins.includes(event.origin)) return;
     if (event.data.type === "REQUEST_PREVIEW_SDK") {
       const { preview, secret } = event.data;
@@ -103,7 +104,6 @@ export const createMessageHandler = (
 export const accept = (origins: Array<string>, refresh: () => void) => {
   createMessageHandler(origins, refresh);
   window.addEventListener("message", messageHandler);
-  console.log("accepted : ", origin);
 };
 
 export const revoke = () => {
