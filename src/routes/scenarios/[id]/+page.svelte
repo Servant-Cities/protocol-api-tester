@@ -21,10 +21,15 @@
   const scenarioID = page.params.id;
 
   const loadData = async () => {
-    const scenariosData = await fetchResource("scenarios");
-    const connectionsData = await fetchResource("connections");
-    const activitiesData = await fetchResource("activities");
-    const triggersData = await fetchResource("triggers");
+    const { scenariosData, connectionsData, activitiesData, triggersData } =
+      await Promise.all(
+        Object.entries({
+          scenariosData: fetchResource("scenarios"),
+          connectionsData: fetchResource("connections"),
+          activitiesData: fetchResource("activities"),
+          triggersData: fetchResource("triggers"),
+        }).map(async ([resource, request]) => [resource, await request])
+      ).then(Object.fromEntries);
 
     scenarios = scenariosData.filter(({ uri }) =>
       uri.endsWith(`/${scenarioID}`)
@@ -54,7 +59,7 @@
   });
 </script>
 
-<h1>Fetched Resources for Scenario {scenarioID}</h1>
+<h1>Fetched Resources for scenario {scenarioID}</h1>
 
 <h2>Scenarios</h2>
 <pre>{JSON.stringify(scenarios, null, 2)}</pre>
