@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import mermaid from "mermaid";
   import { page } from "$app/state";
   import { accept } from "$lib/plagroundPreviewSDK";
 
@@ -7,6 +8,7 @@
   let connections = $state([]);
   let activities = $state([]);
   let triggers = $state([]);
+  let mermaidGraph = $state("");
 
   async function fetchResource(resourceName) {
     try {
@@ -46,39 +48,72 @@
     triggers = triggersData.filter(({ uri }) =>
       activities.some(({ trigger }) => trigger === uri)
     );
+
+    generateMermaidDiagram();
   };
+
+  function generateMermaidDiagram() {
+    let graphDefinition = `flowchart LR\n`;
+    const activityMap = new Map();
+
+    activities.forEach((activity, index) => {
+      activityMap.set(activity.uri, `A${index}`);
+    });
+
+    connections.forEach(({ previous_activity, next_activity }) => {
+      if (
+        activityMap.has(previous_activity) &&
+        activityMap.has(next_activity)
+      ) {
+        const prevId = activityMap.get(previous_activity);
+        const nextId = activityMap.get(next_activity);
+        const prevName = activities.find(a => a.uri === previous_activity).name;
+        const nextName = activities.find(a => a.uri === next_activity).name;
+
+        graphDefinition += `\u0020\u0020\u0020\u0020${prevId}[${prevName}]-->${nextId}[${nextName}]\n`;
+      }
+    });
+
+    mermaidGraph = graphDefinition;
+  }
+
+  $effect(() => {
+    if (mermaidGraph) {
+      setTimeout(() => {
+        mermaid.init();
+      }, 0);
+    }
+  });
 
   onMount(async () => {
     accept(
       [
         "https://demo-rest-playground.servantcities.eu",
-        "http://localhost:4000", //unsafe for now, hardcode local grist-adapter
+        "http://localhost:4000",
       ],
       loadData
     );
   });
 </script>
 
-<h1>Fetched Resources for scenario {scenarioID}</h1>
+<h2>Fetched Resources for scenario {scenarioID}</h2>
 
-<h2>Scenarios</h2>
-<pre>{JSON.stringify(scenarios, null, 2)}</pre>
-
-<h2>Connections</h2>
-<pre>{JSON.stringify(connections, null, 2)}</pre>
-
-<h2>Activities</h2>
-<pre>{JSON.stringify(activities, null, 2)}</pre>
-
-<h2>Triggers</h2>
-<pre>{JSON.stringify(triggers, null, 2)}</pre>
+<!-- Dynamically Rendered Mermaid Diagram -->
+<pre class="mermaid">
+  {mermaidGraph}
+</pre>
 
 <style>
   pre {
     border: white solid 2px;
     border-radius: 8px;
     padding: 10px;
-    border-radius: 5px;
     overflow-x: auto;
+  }
+  .mermaid {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
   }
 </style>
