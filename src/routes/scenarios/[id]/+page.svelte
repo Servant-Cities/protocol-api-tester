@@ -4,10 +4,9 @@
   import { page } from "$app/state";
   import { accept } from "$lib/plagroundPreviewSDK";
 
-  let scenarios = $state([]);
+  let selectedScenario = $state(null);
   let connections = $state([]);
   let activities = $state([]);
-  let triggers = $state([]);
   let mermaidGraph = $state("");
 
   async function fetchResource(resourceName) {
@@ -23,30 +22,23 @@
   const scenarioID = page.params.id;
 
   const loadData = async () => {
-    const { scenariosData, connectionsData, activitiesData, triggersData } =
-      await Promise.all(
-        Object.entries({
-          scenariosData: fetchResource("scenarios"),
-          connectionsData: fetchResource("connections"),
-          activitiesData: fetchResource("activities"),
-          triggersData: fetchResource("triggers"),
-        }).map(async ([resource, request]) => [resource, await request])
-      ).then(Object.fromEntries);
+    const { scenarioData, connectionsData, activitiesData } = await Promise.all(
+      Object.entries({
+        scenarioData: fetchResource(`scenarios/${scenarioID}`),
+        connectionsData: fetchResource("connections"),
+        activitiesData: fetchResource("activities"),
+      }).map(async ([resource, request]) => [resource, await request])
+    ).then(Object.fromEntries);
 
-    scenarios = scenariosData.filter(({ uri }) =>
-      uri.endsWith(`/${scenarioID}`)
-    );
-    connections = connectionsData.filter(({ scenario }) =>
-      scenario.endsWith(`/${scenarioID}`)
+    selectedScenario = scenarioData;
+    connections = connectionsData.filter(
+      ({ scenario }) => selectedScenario.uri === scenario
     );
     activities = activitiesData.filter(({ uri }) =>
       connections.some(
         ({ previous_activity, next_activity }) =>
           previous_activity === uri || next_activity === uri
       )
-    );
-    triggers = triggersData.filter(({ uri }) =>
-      activities.some(({ trigger }) => trigger === uri)
     );
 
     generateMermaidDiagram();
@@ -96,12 +88,17 @@
   });
 </script>
 
-<h2>Fetched Resources for scenario {scenarioID}</h2>
+{#if mermaidGraph}
+  <h2>Fetched {selectedScenario.name}</h2>
 
-<!-- Dynamically Rendered Mermaid Diagram -->
-<pre class="mermaid">
-  {mermaidGraph}
-</pre>
+  <pre class="mermaid">
+    {mermaidGraph}
+  </pre>
+{:else}
+  <div class="loader-wrapper">
+    <div class="loader"></div>
+  </div>
+{/if}
 
 <style>
   pre {
@@ -115,5 +112,62 @@
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #ddd;
+  }
+  .loader-wrapper {
+    height: 100%;
+    width: 100%;
+    padding-top: 10%;
+  }
+  .loader {
+    margin: 0 auto;
+    width: 40px;
+    aspect-ratio: 1;
+    position: relative;
+  }
+  .loader:before,
+  .loader:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: -8px 0 0 -8px;
+    width: 16px;
+    aspect-ratio: 1;
+    background: #3fb8af;
+    animation:
+      l1-1 2s infinite,
+      l1-2 0.5s infinite;
+  }
+  .loader:after {
+    background: #ff3d7f;
+    animation-delay: -1s, 0s;
+  }
+  @keyframes l1-1 {
+    0% {
+      top: 0;
+      left: 0;
+    }
+    25% {
+      top: 100%;
+      left: 0;
+    }
+    50% {
+      top: 100%;
+      left: 100%;
+    }
+    75% {
+      top: 0;
+      left: 100%;
+    }
+    100% {
+      top: 0;
+      left: 0;
+    }
+  }
+  @keyframes l1-2 {
+    80%,
+    100% {
+      transform: rotate(0.5turn);
+    }
   }
 </style>
